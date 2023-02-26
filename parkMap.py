@@ -14,39 +14,13 @@ import time
 # Importing Libraries
 import serial
 import time
-arduino = serial.Serial(port='COM4', baudrate=115200, timeout=.1)
-pursuit = False
+arduino = serial.Serial(port='', baudrate=115200, timeout=.1)
+#pursuit = False
 def write_read(x):
     arduino.write(bytes(x, 'utf-8'))
     time.sleep(0.05)
 
-mappy = [[(180, 126, 1), (455, 126, 0), (620, 126, 1), (915, 126, 0), (1076, 126, 1)],
-            [(180, 253, 1), (455, 253, 0), (620, 253, 1), (915, 253, 0), (1076, 253, 1)],
-            [(180, 379, 1), (455, 379, 0), (620, 379, 1), (915, 379, 0), (1076, 379, 1)],
-            [(180, 505, 1), (455, 505, 0), (620, 505, 1), (915, 505, 0), (1076, 505, 1)],
-            [(180, 690, 1), (455, 690, 0), (620, 690, 0), (915, 690, 0), (1076, 690, 0)],
-            [(180, 840, 1), (455, 840, 1), (620, 840, 1), (915, 840, 1), (1076, 840, 1)]]
-
-occupancy = {
-    '1': [(0, 0), 0],
-    '2': [(1, 0), 0],
-    '3': [(2, 0), 0],
-    '4': [(3, 0), 0],
-    '5': [(0, 2), 0],
-    '6': [(1,2), 0],
-    '7': [(2,2), 0],
-    '8': [(3,2), 0],
-    '9': [(0,4), 0],
-    '10':[(1,4), 0],
-    '11':[(2,4), 0],
-    '12':[(3,4), 0]
-}
-
-priority = ['1', '5', '9', '2', '6', '10', '3', '7', '11', '4', '8', '12']
-priority_tracker = 0
-
-
-def getGridCoordinate(location):
+def getGridCoordinate(mappy, location):
     current_x = location[0]
     current_y = location[1]
     for i in range(0, len(mappy)):
@@ -75,6 +49,7 @@ greenUpper = (110, 255, 255) #(162, 99, 98)
 pts = deque(maxlen=args["buffer"])
 
 def main():
+    pursuit = False
     logging.basicConfig(level=logging.INFO)
 
     args = parse_args()
@@ -96,7 +71,32 @@ class LotBorders:
         self.mask = []
 
     def lotOutline(self):
-        
+        mappy = [[(180, 126, 1), (455, 126, 0), (620, 126, 1), (915, 126, 0), (1076, 126, 1)],
+            [(180, 253, 1), (455, 253, 0), (620, 253, 1), (915, 253, 0), (1076, 253, 1)],
+            [(180, 379, 1), (455, 379, 0), (620, 379, 1), (915, 379, 0), (1076, 379, 1)],
+            [(180, 505, 1), (455, 505, 0), (620, 505, 1), (915, 505, 0), (1076, 505, 1)],
+            [(180, 690, 1), (455, 690, 0), (620, 690, 0), (915, 690, 0), (1076, 690, 0)],
+            [(180, 840, 1), (455, 840, 1), (620, 840, 1), (915, 840, 1), (1076, 840, 1)]]
+
+        occupancy = {
+            '1': [(0, 0), 0],
+            '2': [(1, 0), 0],
+            '3': [(2, 0), 0],
+            '4': [(3, 0), 0],
+            '5': [(0, 2), 0],
+            '6': [(1,2), 0],
+            '7': [(2,2), 0],
+            '8': [(3,2), 0],
+            '9': [(0,4), 0],
+            '10':[(1,4), 0],
+            '11':[(2,4), 0],
+            '12':[(3,4), 0]
+        }
+
+        priority = ['1', '5', '9', '2', '6', '10', '3', '7', '11', '4', '8', '12']
+        priority_tracker = 0
+        stop = False
+        pursuit = False
         capture = open_cv.VideoCapture(0)
     
         coordinates_data = self.coordinates_data
@@ -163,10 +163,7 @@ class LotBorders:
                 # find the largest contour in the mask, then use
                 # it to compute the minimum enclosing circle and
                 # centroid
-                frame_counter += 1
-                if(frame_counter > 15 and pursuit == False):
-                    write_read(priority[priority_tracker])
-                    pursuit = True
+                
                 c = max(cnts, key=open_cv.contourArea)
                 ((x, y), radius) = open_cv.minEnclosingCircle(c)
                 M = open_cv.moments(c)
@@ -176,17 +173,26 @@ class LotBorders:
                 
                 # only proceed if the radius meets a minimum size
                 if radius > 10:
+                    frame_counter += 1
+                    if(frame_counter > 30 and pursuit == False and stop == False):
+                        #write_read(priority[priority_tracker])
+                        print('Starting')
+                        pursuit = True
+                        target = occupancy[priority[priority_tracker]][0]
+                        print(target)
                     # draw the circle and centroid on the frame,
                     # then update the list of tracked points
                     #open_cv.circle(frame, (int(x), int(y)), int(radius),S
                     #	(0, 255, 255), 2)
-                    grid_y, grid_x, isLot = getGridCoordinate(center)
+                    grid_y, grid_x, isLot = getGridCoordinate(mappy, center)
                     #print('Grid X: ', grid_x, ' Grid Y: ', grid_y, ' Is a lot: ', isLot)
-                    if(pursuit and (center[0] <= mappy[grid_y][grid_x][0]) and (center[1] <= mappy[grid_y][grid_x][1])):
+                    
+                    if(pursuit and (center[0] <= mappy[target[1]][target[0]][0]) and (center[1] <= mappy[target[1]][target[0]][1])):
                         print('Arrival')
                         write_read('-1')
-                        occupancy[priority[priority_tracker][1]] = 1
+                        occupancy[priority[priority_tracker]][1] = 1
                         pursuit = False
+                        stop = True
                         frame_counter = 0
                         priority_tracker += 1
                     open_cv.circle(frame, center, 10, (0, 0, 255), -1)

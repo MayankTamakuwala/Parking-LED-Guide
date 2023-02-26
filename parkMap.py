@@ -25,8 +25,12 @@ def getGridCoordinate(location):
     for i in range(0, len(mappy)):
         for j in range(0, len(mappy[0])):
             if(current_x <= mappy[i][j][0] and current_y <= mappy[i][j][1]):
-                return i, j
-    return 0, 0
+                
+                if mappy[i][j][2] == 1:
+                    return i, j, 1
+                else:
+                    return i,j,0
+    return 0, 0, 1
 
 
 # construct the argument parse and parse the arguments
@@ -40,8 +44,8 @@ args = vars(ap.parse_args())
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
-greenLower =(101, 40, 20)  #(162, 99, 49) 
-greenUpper = (120, 255, 255) #(162, 99, 98) 
+greenLower =(95, 50, 50)  #(162, 99, 49) 
+greenUpper = (110, 255, 255) #(162, 99, 98) 
 pts = deque(maxlen=args["buffer"])
 
 def main():
@@ -53,10 +57,10 @@ def main():
 
     with open(data_file, "r") as data:
         points = yaml.safe_load(data)
-        detector = MotionDetector(points)
-        detector.detect_motion()
+        detector = LotBorders(points)
+        detector.lotOutline()
 
-class MotionDetector:
+class LotBorders:
     def __init__(self,  coordinates):
      
         self.coordinates_data = coordinates
@@ -65,7 +69,7 @@ class MotionDetector:
         self.bounds = []
         self.mask = []
 
-    def detect_motion(self):
+    def lotOutline(self):
         
         capture = open_cv.VideoCapture(0)
     
@@ -101,7 +105,7 @@ class MotionDetector:
                 # color = COLOR_GREEN if statuses[index] else COLOR_BLUE
                 draw_contours(new_frame, coordinates, str(p["id"] + 1), (0,0,0), (0,0,0))
 
-
+            
              # grab the current frame
             frame = new_frame
             # handle the frame from VideoCapture or VideoStream
@@ -142,9 +146,9 @@ class MotionDetector:
                 
 
                 # Calculate the section grid where the center 
-                grid_y, grid_x = getGridCoordinate(center)
-                print('Grid X: ', grid_x, ' Grid Y: ', grid_y)
-
+                grid_y, grid_x, isLot = getGridCoordinate(center)
+                print('Grid X: ', grid_x, ' Grid Y: ', grid_y, ' Is a lot: ', isLot)
+               
                 # only proceed if the radius meets a minimum size
                 if radius > 10:
                     # draw the circle and centroid on the frame,

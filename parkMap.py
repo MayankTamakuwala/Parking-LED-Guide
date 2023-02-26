@@ -40,8 +40,8 @@ args = vars(ap.parse_args())
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
-greenLower =(10, 100, 20)  #(162, 99, 49) 
-greenUpper = (25, 255, 255) #(162, 99, 98) 
+greenLower =(101, 40, 20)  #(162, 99, 49) 
+greenUpper = (120, 255, 255) #(162, 99, 98) 
 pts = deque(maxlen=args["buffer"])
 
 def main():
@@ -151,7 +151,7 @@ class MotionDetector:
                     # then update the list of tracked points
                     #open_cv.circle(frame, (int(x), int(y)), int(radius),S
                     #	(0, 255, 255), 2)
-                    open_cv.circle(frame, center, 5, (0, 0, 255), -1)
+                    open_cv.circle(frame, center, 10, (0, 0, 255), -1)
             # update the points queue
             pts.appendleft(center)
             

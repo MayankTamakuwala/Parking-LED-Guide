@@ -1,12 +1,9 @@
 import cv2 as open_cv
-from colors import COLOR_RED
-
-
 def draw_contours(image,
                   coordinates,
                   label,
                   font_color,
-                  border_color=COLOR_RED,
+                  border_color= (255, 0, 0),
                   line_thickness=1,
                   font=open_cv.FONT_HERSHEY_SIMPLEX,
                   font_scale=0.5):

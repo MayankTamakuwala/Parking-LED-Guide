@@ -7,6 +7,16 @@ import cv2
 import imutils
 import time
 
+mappy = [[(180, 126, 1), (455, 126, 0), (620, 126, 1), (915, 126, 0), (1075, 126, 1)],
+            [(180, 253, 1), (455, 253, 0), (620, 253, 1), (915, 253, 0), (1075, 253, 1)],
+            [(180, 379, 1), (455, 379, 0), (620, 379, 1), (915, 379, 0), (1075, 379, 1)],
+            [(180, 505, 1), (455, 505, 0), (620, 505, 1), (915, 505, 0), (1075, 505, 1)],
+            [(180, 690, 1), (455, 690, 0), (620, 690, 0), (915, 690, 0), (1075, 690, 0)],
+            [(180, 839, 1), (455, 839, 1), (620, 839, 1), (915, 839, 1), (1075, 839, 1)]]
+
+def getGridCoordinate(location):
+	return location
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video",
@@ -68,7 +78,8 @@ while True:
 		((x, y), radius) = cv2.minEnclosingCircle(c)
 		M = cv2.moments(c)
 		center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-		print(center)
+		# Use this center as the center of the detected object (color-wise)
+		print(center[0])
 		# only proceed if the radius meets a minimum size
 		if radius > 10:
 			# draw the circle and centroid on the frame,

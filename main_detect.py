@@ -2,9 +2,11 @@ import cv2
 import numpy as np
 import time
 net = cv2.dnn.readNet('yolov3.weights', 'yolov3.cfg')
-classes = ['car']
+classes = []
+with open('coco.names','r') as f:
+    classes = [line.strip() for line in f.readlines()]
 layer_names = net.getLayerNames()
-outputlayers = [layer_names[i[0]-1] for i in net.getUnconnectedOutLayers()]
+outputlayers = [layer_names[i-1] for i in net.getUnconnectedOutLayers()]
 
 colors = np.random.uniform(0,255,size=(len(classes),3))
 
@@ -53,11 +55,11 @@ while True:
             confidence = confidences[i]
             color = colors[class_ids[i]]
             cv2.rectangle(frame,(x,y),(x+y,y+h),color,2)
-            cv2.putText(frame,label+" "+str(round(confidences,2)),(x,y+30),font,1,(255,255,255), 2)
+            cv2.putText(frame,label+" "+str(round(confidence,2)),(x,y+30),font,1,(255,255,255), 2)
 
         elapsed_time = time.time()-starting_time
         fps = frame_id/elapsed_time
-        cv2.putText(frame,'FPS:'+str(round(fps,2)),(10,50),font,2(0,0,0),1)
+        cv2.putText(frame,'FPS:'+str(round(fps,2)),(10,50),font,2,(0,0,0),1)
 
         cv2.imshow('Image',frame)
         key = cv2.waitKey(1)
